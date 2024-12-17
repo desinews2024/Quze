@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1, h3 { text-align: center; color: #007BFF; }
+        .question {
+            margin: 20px 0;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+        #result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dynamic Quiz</h1>
+        <div id="quiz"></div>
+        <button onclick="submitQuiz()">Submit</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let questions = [];
+
+        // Fetch questions from back-end
+        async function loadQuestions() {
+            const response = await fetch("http://localhost:3000/api/questions");
+            questions = await response.json();
+            displayQuiz();
+        }
+
+        function displayQuiz() {
+            const quizContainer = document.getElementById("quiz");
+            quizContainer.innerHTML = "";
+            questions.forEach((q, index) => {
+                const questionHTML = `
+                    <div class="question">
+                        <p>${index + 1}. ${q.question}</p>
+                        ${q.options.map((opt, i) => `
+                            <label>
+                                <input type="radio" name="q${index}" value="${i}"> ${opt}
+                            </label>
+                        `).join("")}
+                    </div>
+                `;
+                quizContainer.innerHTML += questionHTML;
+            });
+        }
+
+        function submitQuiz() {
+            let resultHTML = "<h3>Quiz Results:</h3>";
+            let allCorrect = true;
+
+            questions.forEach((q, index) => {
+                const userAnswer = document.querySelector(`input[name="q${index}"]:checked`);
+                if (!userAnswer || parseInt(userAnswer.value) !== q.correct) {
+                    resultHTML += `<p>Question ${index + 1}: Galat jawab. Sahi jawab: ${q.options[q.correct]}</p>`;
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) resultHTML = "<h3>Shandar! Saare answers sahi hain.</h3>";
+            document.getElementById("result").innerHTML = resultHTML;
+        }
+
+        loadQuestions();
+    </script>
+</body>
+</html>
