@@ -3,89 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Quiz</title>
+    <title>Human Anatomy Quiz</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
             color: #333;
         }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: white;
+        .quiz-container {
+            width: 90%;
+            max-width: 800px;
+            margin: 30px auto;
+            background: #fff;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        h1, h3 { text-align: center; color: #007BFF; }
+        h1 {
+            text-align: center;
+            color: #007BFF;
+        }
         .question {
             margin: 20px 0;
+            font-size: 18px;
+        }
+        .options label {
+            display: block;
+            margin-bottom: 10px;
         }
         button {
             background-color: #007BFF;
-            color: white;
-            padding: 10px 15px;
+            color: #fff;
             border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
             cursor: pointer;
+            font-size: 16px;
         }
-        button:hover { background-color: #0056b3; }
-        #result { margin-top: 20px; }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Dynamic Quiz</h1>
+    <div class="quiz-container">
+        <h1>Human Anatomy Quiz</h1>
         <div id="quiz"></div>
         <button onclick="submitQuiz()">Submit</button>
-        <div id="result"></div>
+        <div id="result" class="result" style="display: none;"></div>
     </div>
 
     <script>
-        let questions = [];
+        // Questions Data
+        const questions = [
+            { question: "रक्त का pH मान क्या होता है?", options: ["6.4", "7.4", "8.0", "5.8"], correct: 1 },
+            { question: "मानव शरीर में सबसे बड़ी ग्रंथि कौन सी है?", options: ["यकृत", "अग्न्याशय", "थायरॉयड", "तिल्ली"], correct: 0 },
+            { question: "रक्त को थक्का जमाने में कौन सी कोशिकाएं मदद करती हैं?", options: ["RBC", "WBC", "प्लेटलेट्स", "प्लाज्मा"], correct: 2 },
+            { question: "रक्त समूह का पता किसने लगाया?", options: ["अलेक्जेंडर फ्लेमिंग", "कार्ल लैंडस्टीनर", "वॉटसन और क्रिक", "लुइस पाश्चर"], correct: 1 },
+            { question: "किडनी का कार्यात्मक इकाई क्या कहलाता है?", options: ["न्यूरॉन", "नेफ्रॉन", "एविडक्ट", "ग्लोमेरुलस"], correct: 1 },
+            { question: "लाल रक्त कोशिकाओं का जीवनकाल कितना होता है?", options: ["60 दिन", "90 दिन", "120 दिन", "150 दिन"], correct: 2 },
+            { question: "इंसुलिन किस अंग से स्रावित होता है?", options: ["यकृत", "अग्न्याशय", "तिल्ली", "फेफड़े"], correct: 1 },
+            { question: "मानव शरीर में हड्डियों की कुल संख्या कितनी होती है?", options: ["200", "206", "210", "212"], correct: 1 },
+            { question: "डायाफ्राम का मुख्य कार्य क्या है?", options: ["पाचन", "सांस लेना", "रक्त का प्रवाह", "तंत्रिका नियंत्रण"], correct: 1 },
+            { question: "थायरॉयड ग्रंथि का मुख्य हार्मोन कौन सा है?", options: ["एड्रेनालिन", "थायरोक्सिन", "टेस्टोस्टेरोन", "मेलाटोनिन"], correct: 1 },
+            { question: "मस्तिष्क का सबसे बड़ा हिस्सा कौन सा है?", options: ["सेरीबेलम", "सेरीब्रल कॉर्टेक्स", "मेडुला ऑब्लोंगाटा", "सेरीब्रल हेमिस्फीयर"], correct: 3 },
+            { question: "मानव शरीर में कितने प्रकार के रक्त समूह होते हैं?", options: ["2", "3", "4", "6"], correct: 2 },
+            { question: "लिम्फ क्या है?", options: ["रक्त का प्रकार", "एक ऊतक", "रक्त का शुद्ध भाग", "ऊतक द्रव"], correct: 3 },
+            { question: "सिनो-एट्रियल नोड (SA Node) का कार्य क्या है?", options: ["मस्तिष्क को संकेत भेजना", "हृदय की धड़कन नियंत्रित करना", "रक्त प्रवाह को बढ़ाना", "मांसपेशियों को सक्रिय करना"], correct: 1 },
+            { question: "फेफड़े के अल्वेओली में कौन सी गैस का आदान-प्रदान होता है?", options: ["ऑक्सीजन और नाइट्रोजन", "ऑक्सीजन और कार्बन डाइऑक्साइड", "हाइड्रोजन और ऑक्सीजन", "नाइट्रोजन और कार्बन डाइऑक्साइड"], correct: 1 },
+            { question: "पाचन तंत्र में पित्त रस कहाँ बनता है?", options: ["पेट", "यकृत", "अग्न्याशय", "आंत"], correct: 1 },
+            { question: "स्मरण शक्ति के लिए कौन सा हिस्सा जिम्मेदार है?", options: ["सेरीब्रल कॉर्टेक्स", "थैलेमस", "हिप्पोकैम्पस", "सेरीबेलम"], correct: 2 },
+            { question: "रक्त को शरीर में किसके द्वारा पंप किया जाता है?", options: ["फेफड़े", "मस्तिष्क", "हृदय", "किडनी"], correct: 2 },
+            { question: "त्वचा में कौन सा रंगद्रव्य पाया जाता है?", options: ["हीमोग्लोबिन", "मेलानिन", "केराटिन", "कोलेजन"], correct: 1 },
+            { question: "मनुष्य के शरीर में कितने क्रोमोसोम होते हैं?", options: ["22", "46", "23", "44"], correct: 1 }
+        ];
 
-        // Fetch questions from back-end
-        async function loadQuestions() {
-            const response = await fetch("http://localhost:3000/api/questions");
-            questions = await response.json();
-            displayQuiz();
-        }
-
-        function displayQuiz() {
-            const quizContainer = document.getElementById("quiz");
-            quizContainer.innerHTML = "";
+        // Function to display quiz dynamically
+        function loadQuiz() {
+            const quizContainer = document.getElementById('quiz');
             questions.forEach((q, index) => {
                 const questionHTML = `
                     <div class="question">
                         <p>${index + 1}. ${q.question}</p>
-                        ${q.options.map((opt, i) => `
-                            <label>
-                                <input type="radio" name="q${index}" value="${i}"> ${opt}
-                            </label>
-                        `).join("")}
+                        <div class="options">
+                            ${q.options.map((option, i) => `
+                                <label>
+                                    <input type="radio" name="q${index}" value="${i}"> ${option}
+                                </label>
+                            `).join('')}
+                        </div>
                     </div>
                 `;
                 quizContainer.innerHTML += questionHTML;
             });
         }
 
+        // Function to submit quiz and show results
         function submitQuiz() {
-            let resultHTML = "<h3>Quiz Results:</h3>";
+            const resultDiv = document.getElementById('result');
             let allCorrect = true;
+            let resultHTML = "<h3>Quiz Results:</h3>";
 
             questions.forEach((q, index) => {
                 const userAnswer = document.querySelector(`input[name="q${index}"]:checked`);
-                if (!userAnswer || parseInt(userAnswer.value) !== q.correct) {
-                    resultHTML += `<p>Question ${index + 1}: Galat jawab. Sahi jawab: ${q.options[q.correct]}</p>`;
+                if (!userAnswer) {
+                    resultHTML += `<p>Question ${index + 1}: Aapne jawab nahi diya.</p>`;
+                    allCorrect = false;
+                } else if (parseInt(userAnswer.value) !== q.correct) {
+                    resultHTML += `<p>Question ${index + 1}: Galat jawab. Sahi jawab: <strong>${q.options[q.correct]}</strong></p>`;
                     allCorrect = false;
                 }
             });
 
-            if (allCorrect) resultHTML = "<h3>Shandar! Saare answers sahi hain.</h3>";
-            document.getElementById("result").innerHTML = resultHTML;
+            if (allCorrect) {
+                resultHTML = "<h3>Shandar! Aapne saare questions ka sahi jawab diya!</h3>";
+            }
+
+            resultDiv.innerHTML = resultHTML;
+            resultDiv.style.display = "block";
         }
 
-        loadQuestions();
+        // Load quiz on page load
+        loadQuiz();
     </script>
 </body>
 </html>
